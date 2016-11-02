@@ -17,13 +17,8 @@
  * under the License.
  */
 
-package org.apache.samza.pipeline.api;
+package org.apache.samza.pipeline;
 
-import org.apache.samza.config.Config;
-import org.apache.samza.pipeline.stream.PStream;
-
-
-public interface StreamManager {
-  void createOrUpdateStream(PStream stream, Config config);
-
+public class TestPipelineBuilder {
+  // Todo test with and without chaining
 }

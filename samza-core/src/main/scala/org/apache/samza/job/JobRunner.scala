@@ -20,7 +20,7 @@
 package org.apache.samza.job
 
 import org.apache.samza.SamzaException
-import org.apache.samza.config.{ConfigRewriter, Config}
+import org.apache.samza.config.{Config, ConfigRewriter}
 import org.apache.samza.config.JobConfig.Config2Job
 import org.apache.samza.coordinator.stream.messages.{Delete, SetConfig}
 import org.apache.samza.job.ApplicationStatus.Running
@@ -28,9 +28,12 @@ import org.apache.samza.util.ClassLoaderHelper
 import org.apache.samza.util.CommandLine
 import org.apache.samza.util.Logging
 import org.apache.samza.util.Util
+
 import scala.collection.JavaConversions._
 import org.apache.samza.metrics.MetricsRegistryMap
 import org.apache.samza.coordinator.stream.CoordinatorStreamSystemFactory
+import org.apache.samza.pipeline.{PipelineRunner, SingleStagePipelineFactory}
+import org.apache.samza.pipeline.api.{Pipeline, PipelineFactory}
 
 
 object JobRunner extends Logging {
@@ -63,7 +66,16 @@ object JobRunner extends Logging {
     val cmdline = new CommandLine
     val options = cmdline.parser.parse(args: _*)
     val config = cmdline.loadConfig(options)
-    new JobRunner(rewriteConfig(config)).run()
+
+    // TODO this is just a hack to use the pipeline runner
+    val configPipelineFactory = "job.pipeline.factory.class"
+    val factory = if (config.containsKey(configPipelineFactory)) {
+      config.getClass(configPipelineFactory).asInstanceOf[PipelineFactory]
+    } else {
+      new SingleStagePipelineFactory
+    }
+    val pipeline = factory.create(config)
+    new PipelineRunner(pipeline, config).run()
   }
 }
 

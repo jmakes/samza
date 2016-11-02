@@ -100,6 +100,7 @@
         <allow pkg="org.apache.samza.config" />
         <allow pkg="org.apache.samza.metrics" />
         <allow pkg="org.apache.samza.serializers" />
+        <allow pkg="org.apache.samza.util" />
 
         <allow class="org.apache.samza.Partition" />
         <allow class="org.apache.samza.SamzaException" />
@@ -111,7 +112,6 @@
 
         <subpackage name="mock">
             <allow pkg="org.apache.samza.system" />
-            <allow pkg="org.apache.samza.util" />
         </subpackage>
     </subpackage>
 
@@ -172,6 +172,8 @@
     </subpackage>
 
     <subpackage name="pipeline">
+        <allow pkg="org.apache.samza.config" />
+        <allow pkg="org.apache.samza.job" />
         <allow pkg="org.apache.samza.pipeline" />
         <allow pkg="org.apache.samza.system" />
     </subpackage>

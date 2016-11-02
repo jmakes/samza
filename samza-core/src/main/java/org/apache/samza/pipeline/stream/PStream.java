@@ -85,6 +85,15 @@ public class PStream {
     return systemStream;
   }
 
+  public String getSystem() {
+    return systemStream.getSystem();
+  }
+
+  public String getStream() {
+    return systemStream.getStream();
+  }
+
+  // TODO maybe this should only be exposed on a PartitionedStream subtype
   public int getPartitionCount() {
     return partitionCount;
   }

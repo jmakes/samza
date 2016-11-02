@@ -16,14 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.samza.pipeline.api;
 
 import org.apache.samza.config.Config;
-import org.apache.samza.pipeline.stream.PStream;
 
 
-public interface StreamManager {
-  void createOrUpdateStream(PStream stream, Config config);
-
+public interface PipelineFactory {
+  /**
+   * TODO
+   * @return
+   */
+  Pipeline create(Config config);
 }

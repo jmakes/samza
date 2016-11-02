@@ -29,7 +29,7 @@ public class Processor {
   // The task class corresponding to the task.class property in the config.
 //  private final Class<? extends StreamTask> clazz;
 
-  // TODO alt; instead of a class, we could have a class name and URL to a tarball so they don't have to be packaged together
+  // TODO alt; instead of a class, we could just have an instance
 
 //  public Processor(Class<? extends StreamTask> processorClass) {
 //    clazz = processorClass;
@@ -38,6 +38,10 @@ public class Processor {
   public Processor(String name) {
     // TODO null checks and validation
     this.name = name;
+  }
+
+  public String getName() {
+    return name;
   }
 
   @Override

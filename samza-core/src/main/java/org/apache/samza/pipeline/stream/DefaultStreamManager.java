@@ -17,13 +17,27 @@
  * under the License.
  */
 
-package org.apache.samza.pipeline.api;
+package org.apache.samza.pipeline.stream;
 
 import org.apache.samza.config.Config;
-import org.apache.samza.pipeline.stream.PStream;
+import org.apache.samza.pipeline.api.StreamManager;
+import org.apache.samza.system.SystemAdmin;
 
+// TODO DODODODODODODODO Test with a kafka dev cluster so as to not pollute other clusters with test topics.
 
-public interface StreamManager {
-  void createOrUpdateStream(PStream stream, Config config);
+public class DefaultStreamManager implements StreamManager {
+  private final SystemAdmin admin;
+  // TODO should the KafkaStreamManager know about Pipeline or just start individual PStreams? Perhaps even with pipeline it should be stateless.
+
+  public DefaultStreamManager(SystemAdmin admin) {
+    this.admin = admin;
+  }
+
+  @Override
+  public void createOrUpdateStream(PStream stream, Config config) {
+    // todo exception if any failure. We should not continue with running a pipeline with misconfigured streams
+    admin.createStream(stream.getStream(), config);
+  }
 
 }
+

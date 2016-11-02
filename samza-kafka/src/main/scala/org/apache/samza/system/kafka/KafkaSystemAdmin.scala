@@ -432,10 +432,11 @@ class KafkaSystemAdmin(
     offsets
   }
 
-  private def createTopicInKafka(topicName: String, numKafkaChangelogPartitions: Int) {
+  // TODO refactor and use for KafkaStreamManager. Perhaps move it there and reference from here
+  private def createTopicInKafka(topicName: String, numPartitions: Int) {
     val retryBackoff: ExponentialSleepStrategy = new ExponentialSleepStrategy
-    info("Attempting to create change log topic %s." format topicName)
-    info("Using partition count " + numKafkaChangelogPartitions + " for creating change log topic")
+    info("Attempting to create topic %s." format topicName)
+    info("Using partition count " + numPartitions + " for creating topic")
     val topicMetaInfo = topicMetaInformation.getOrElse(topicName, throw new KafkaChangelogException("Unable to find topic information for topic " + topicName))
     retryBackoff.run(
       loop => {
@@ -444,21 +445,21 @@ class KafkaSystemAdmin(
           AdminUtils.createTopic(
             zkClient,
             topicName,
-            numKafkaChangelogPartitions,
+            numPartitions,
             topicMetaInfo.replicationFactor,
             topicMetaInfo.kafkaProps)
         } finally {
           zkClient.close
         }
 
-        info("Created changelog topic %s." format topicName)
+        info("Created topic %s." format topicName)
         loop.done
       },
 
       (exception, loop) => {
         exception match {
           case e: TopicExistsException =>
-            info("Changelog topic %s already exists." format topicName)
+            info("Topic %s already exists." format topicName)
             loop.done
           case e: Exception =>
             warn("Failed to create topic %s: %s. Retrying." format (topicName, e))
@@ -467,9 +468,9 @@ class KafkaSystemAdmin(
       })
   }
 
-  private def validateTopicInKafka(topicName: String, numKafkaChangelogPartitions: Int) {
+  private def validateTopicInKafka(topicName: String, numPartitions: Int) {
     val retryBackoff: ExponentialSleepStrategy = new ExponentialSleepStrategy
-    info("Validating changelog topic %s." format topicName)
+    info("Validating topic %s." format topicName)
     var metadataTTL = Long.MaxValue // Trust the cache until we get an exception
     retryBackoff.run(
       loop => {
@@ -479,11 +480,11 @@ class KafkaSystemAdmin(
         KafkaUtil.maybeThrowException(topicMetadata.errorCode)
 
         val partitionCount = topicMetadata.partitionsMetadata.length
-        if (partitionCount < numKafkaChangelogPartitions) {
-          throw new KafkaChangelogException("Changelog topic validation failed for topic %s because partition count %s did not match expected partition count of %d" format (topicName, topicMetadata.partitionsMetadata.length, numKafkaChangelogPartitions))
+        if (partitionCount < numPartitions) {
+          throw new KafkaChangelogException("Topic validation failed for topic %s because partition count %s did not match expected partition count of %d" format (topicName, topicMetadata.partitionsMetadata.length, numPartitions))
         }
 
-        info("Successfully validated changelog topic %s." format topicName)
+        info("Successfully validated topic %s." format topicName)
         loop.done
       },
 
@@ -518,6 +519,8 @@ class KafkaSystemAdmin(
   override def validateChangelogStream(topicName: String, numKafkaChangelogPartitions: Int) = {
     validateTopicInKafka(topicName, numKafkaChangelogPartitions)
   }
+
+  // TODO implement the new methods that are defaulted in StreamManager
 
   /**
    * Compare the two offsets. Returns x where x < 0 if offset1 < offset2;
