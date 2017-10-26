@@ -86,14 +86,16 @@ public class SamzaRestService {
    */
   public static void main(String[] args)
       throws Exception {
-    ScheduledExecutorSchedulingProvider schedulingProvider = null;
+    SamzaRestService restService = null;
+    SamzaMonitorService monitorService = null;
+    Map<String, MetricsReporter> metricsReporters = null;
     try {
       SamzaRestConfig config = parseConfig(args);
       ReadableMetricsRegistry metricsRegistry = new MetricsRegistryMap();
       log.info("Creating new SamzaRestService with config: {}", config);
       MetricsConfig metricsConfig = new MetricsConfig(config);
-      Map<String, MetricsReporter> metricsReporters = MetricsReporterLoader.getMetricsReporters(metricsConfig, Util.getLocalHost().getHostName());
-      SamzaRestService restService = new SamzaRestService(new Server(config.getPort()), metricsRegistry, metricsReporters,
+      metricsReporters = MetricsReporterLoader.getMetricsReporters(metricsConfig, Util.getLocalHost().getHostName());
+      restService = new SamzaRestService(new Server(config.getPort()), metricsRegistry, metricsReporters,
                                                           new ServletContextHandler(ServletContextHandler.SESSIONS));
 
       // Add applications
@@ -106,19 +108,24 @@ public class SamzaRestService {
                                                               .setNameFormat("MonitorThread-%d")
                                                               .build();
       ScheduledExecutorService schedulingService = Executors.newScheduledThreadPool(1, threadFactory);
-      schedulingProvider = new ScheduledExecutorSchedulingProvider(schedulingService);
-      SamzaMonitorService monitorService = new SamzaMonitorService(config,
-                                                                   metricsRegistry,
-                                                                   schedulingProvider);
+      ScheduledExecutorSchedulingProvider schedulingProvider = new ScheduledExecutorSchedulingProvider(schedulingService);
+      monitorService = new SamzaMonitorService(config,
+                                               metricsRegistry,
+                                               schedulingProvider);
       monitorService.start();
 
       restService.runBlocking();
-      monitorService.stop();
     } catch (Throwable t) {
       log.error("Exception in main.", t);
     } finally {
-      if (schedulingProvider != null){
-        schedulingProvider.stop();
+      if (restService != null) {
+        restService.stop();
+      }
+      if (monitorService != null) {
+        monitorService.stop();
+      }
+      if (metricsReporters != null) {
+        metricsReporters.values().forEach(MetricsReporter::stop);
       }
     }
   }
@@ -158,6 +165,7 @@ public class SamzaRestService {
       start();
       server.join();
     } finally {
+      server.stop();
       server.destroy();
       log.info("Server terminated.");
     }

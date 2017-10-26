@@ -107,8 +107,9 @@ public class LocalStoreMonitor implements Monitor {
         if (!config.getIgnoreFailures()) {
           throw ex;
         }
-        LOG.warn("Config: {} turned on, failures will be ignored. Local store cleanup for job: {} resulted in exception: {}.",
-                 new Object[]{LocalStoreMonitorConfig.CONFIG_IGNORE_FAILURES, jobInstance, ex});
+        LOG.warn(String.format(
+            "Config: %s turned on, failures will be ignored. Local store cleanup for job: %s resulted in exception:",
+            LocalStoreMonitorConfig.CONFIG_IGNORE_FAILURES, jobInstance), ex);
       }
     }
   }
